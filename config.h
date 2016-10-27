@@ -1,0 +1,10 @@
+#define PUN_WINDOW_TITLE "RayCasting"
+#define PUN_CANVAS_WIDTH  320
+#define PUN_CANVAS_HEIGHT 192
+#define PUN_CANVAS_SCALE  3
+
+#define PUN_STACK_CAPACITY megabytes(16)
+#define PUN_STORAGE_CAPACITY megabytes(16)
+
+#define PUN_USE_STB_IMAGE 1
+#define PUN_USE_STB_VORBIS 1
