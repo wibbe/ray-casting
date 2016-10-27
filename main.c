@@ -222,29 +222,21 @@ void step()
    if (key_pressed(KEY_ESCAPE))
       CORE->running = 0;
 
-   if (key_down(KEY_UP))
-      player_pos = vec2_add(player_pos, vec2_mul(player_dir, 0.06f));
+   if (key_down(KEY_W))
+      player_pos = vec2_add(player_pos, vec2_mul(player_dir, 0.08f));
 
-   if (key_down(KEY_DOWN))
-      player_pos = vec2_add(player_pos, vec2_mul(player_dir, -0.06f));
-
-   if (key_down(KEY_LEFT))
-      player_pos = vec2_add(player_pos, vec2_mul(vec2_perp(player_dir), 0.06f));
-
-   if (key_down(KEY_RIGHT))
-      player_pos = vec2_add(player_pos, vec2_mul(vec2_perp(player_dir), -0.06f));
+   if (key_down(KEY_S))
+      player_pos = vec2_add(player_pos, vec2_mul(player_dir, -0.08f));
 
    if (key_down(KEY_A))
-   {
-      player_dir = rotate(player_dir, 0.04f);
-      camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
-   }
+      player_pos = vec2_add(player_pos, vec2_mul(vec2_perp(player_dir), 0.06f));
 
    if (key_down(KEY_D))
-   {
-      player_dir = rotate(player_dir, -0.04f);
-      camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
-   }
+      player_pos = vec2_add(player_pos, vec2_mul(vec2_perp(player_dir), -0.06f));
+
+      
+   player_dir = rotate(player_dir, (CORE->mouse_dx * 0.005f));
+   camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
 
    clip_reset();
    canvas_clear(COLOR_BLACK);

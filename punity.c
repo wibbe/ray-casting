@@ -11,6 +11,7 @@
 // TODO
 #else
 #include <windows.h>
+#include <windowsx.h>
 #include <dsound.h>
 #endif
 
@@ -1390,21 +1391,73 @@ win32_window_callback(HWND window, UINT message, WPARAM wp, LPARAM lp)
         }
             break;
 
-        case WM_KEYUP: {
-            CORE->key_modifiers = win32_app_key_mods();
-            if (wp < PUN_KEYS_MAX) {
-                CORE->key_states[wp] = 0;
-                CORE->key_deltas[wp] = 1;
-                // printf("key released: %d\n", wp);
+        case WM_KEYUP:
+            {
+                CORE->key_modifiers = win32_app_key_mods();
+                if (wp < PUN_KEYS_MAX)
+                {
+                    CORE->key_states[wp] = 0;
+                    CORE->key_deltas[wp] = 1;
+                    // printf("key released: %d\n", wp);
+                }
             }
             return 0;
-        }
+
+        case WM_MOUSEMOVE:
+            {
+                if (!PUN_CAPTURE_MOUSE)
+                {
+                    int x = GET_X_LPARAM(lp);
+                    int y = GET_Y_LPARAM(lp);
+
+                    CORE->mouse_dx = CORE->mouse_x - x;
+                    CORE->mouse_dy = CORE->mouse_y - y;
+                    CORE->mouse_x = x;
+                    CORE->mouse_y = y;
+                }
+            }
             break;
 
-        case WM_CLOSE: {
+        case WM_LBUTTONDOWN:
+            CORE->key_states[KEY_LBUTTON] = 1;
+            CORE->key_deltas[KEY_LBUTTON] = 1;
+            break;
+
+        case WM_LBUTTONUP:
+            CORE->key_states[KEY_LBUTTON] = 0;
+            CORE->key_deltas[KEY_LBUTTON] = 1;
+            break;
+
+        case WM_RBUTTONDOWN:
+            CORE->key_states[KEY_RBUTTON] = 1;
+            CORE->key_deltas[KEY_RBUTTON] = 1;
+            break;
+
+        case WM_RBUTTONUP:
+            CORE->key_states[KEY_RBUTTON] = 0;
+            CORE->key_deltas[KEY_RBUTTON] = 1;
+            break;
+
+        case WM_SETFOCUS:
+            {
+                CORE->has_focus = 1;
+
+                if (PUN_CAPTURE_MOUSE)
+                {
+                    ShowCursor(FALSE);
+                    SetCursorPos(GetSystemMetrics(SM_CXSCREEN) / 2, GetSystemMetrics(SM_CYSCREEN) / 2);
+                }
+            }
+            break;
+
+        case WM_KILLFOCUS:
+            CORE->has_focus = 0;
+            ShowCursor(TRUE);
+            break;
+
+        case WM_CLOSE:
             PostQuitMessage(0);
             CORE->running = 0;
-        }
             break;
     }
 
@@ -1650,6 +1703,7 @@ WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int sho
     memset(CORE, 0, sizeof(Core));
 
     CORE->running = 1;
+    CORE->has_focus = 1;
     CORE->stack = &s_stack;
     CORE->storage = &s_storage;
 
@@ -1742,12 +1796,9 @@ WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int sho
 
     // Canvas
 
-    CORE->canvas.palette.colors[PUN_COLOR_TRANSPARENT] =
-        color_make(0x00, 0x00, 0x00, 0x00);
-    CORE->canvas.palette.colors[PUN_COLOR_BLACK] =
-        color_make(0x00, 0x00, 0x00, 0xff);
-    CORE->canvas.palette.colors[PUN_COLOR_WHITE] =
-        color_make(0xff, 0xff, 0xff, 0xff);
+    CORE->canvas.palette.colors[PUN_COLOR_TRANSPARENT] = color_make(0x00, 0x00, 0x00, 0x00);
+    CORE->canvas.palette.colors[PUN_COLOR_BLACK] = color_make(0x00, 0x00, 0x00, 0xff);
+    CORE->canvas.palette.colors[PUN_COLOR_WHITE] = color_make(0xff, 0xff, 0xff, 0xff);
     CORE->canvas.palette.colors_count = 3;
 
     u32 *window_buffer;
@@ -1777,6 +1828,17 @@ WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int sho
     // TODO: Center window
     ShowWindow(punp_win32_window, SW_SHOW);
 
+
+
+    if (PUN_CAPTURE_MOUSE)
+    {
+        SetCursorPos(screen_width / 2, screen_height / 2);
+        ShowCursor(FALSE);
+    }
+
+    POINT last_mouse_pos, mouse_pos;    
+    GetCursorPos(&last_mouse_pos);
+
     f64 frame_time_stamp, frame_time_now, frame_time_delta;
     int x, y;
     u32 *window_row;
@@ -1793,13 +1855,23 @@ WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int sho
 
         memset(&CORE->key_deltas, 0, PUN_KEYS_MAX);
 
-        while (PeekMessage(&message, 0, 0, 0, PM_REMOVE)) {
-            if (message.message == WM_QUIT) {
+        while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
+        {
+            if (message.message == WM_QUIT)
                 CORE->running = 0;
-            }
 
             TranslateMessage(&message);
             DispatchMessageA(&message);
+        }
+
+        if (PUN_CAPTURE_MOUSE && CORE->has_focus)
+        {
+            POINT mouse_pos;
+            GetCursorPos(&mouse_pos);
+            CORE->mouse_dx = (screen_width / 2) - mouse_pos.x;
+            CORE->mouse_dy = (screen_height / 2) - mouse_pos.y;
+
+            SetCursorPos(screen_width / 2, screen_height / 2);
         }
 
         perf_from(&CORE->perf_step);

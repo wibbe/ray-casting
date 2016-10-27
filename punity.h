@@ -82,6 +82,10 @@
 #define PUN_CANVAS_SCALE 2
 #endif
 
+#ifndef PUN_CAPTURE_MOUSE
+#define PUN_CAPTURE_MOUSE 0
+#endif
+
 #ifndef PUN_STACK_CAPACITY
 #define PUN_STACK_CAPACITY megabytes(1)
 #endif
@@ -569,6 +573,9 @@ typedef struct
     //
     b32 running;
 
+    // Do the window have focus?
+    b32 has_focus;
+
     u32 key_modifiers;
     
     // Indexed with KEY_* constants.
@@ -582,6 +589,12 @@ typedef struct
     // 1 for changed in this frame
     //
     u8 key_deltas[PUN_KEYS_MAX];
+
+    u32 mouse_x;
+    u32 mouse_y;
+    i32 mouse_dx;
+    i32 mouse_dy;
+
 
     // Total frame time.
     PerfSpan perf_frame;
