@@ -8,9 +8,9 @@ The example is base on the excellent Punity library, and its readme follows bell
 ## Usage
 
 1. [Download the Visual C++ Build Tools](http://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe)
-2. Open a terminal and run `vcbuildtools.bat` to configure the build environment
+2. Open a terminal and run `C:\Program Files (x86)\Microsoft Visual C++ Build Tools\vcbuildtools.bat` to configure the build environment
 3. Compile with `build.bat`
-4. Run the final application with `bin\main.exe`
+4. The final application is located in the `bin` directory
 
 
 # Punity
