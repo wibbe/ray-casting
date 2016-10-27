@@ -1,3 +1,18 @@
+
+# Ray-casting Demo
+
+A simple ray casting demo that is inspired by how Wolfenstein 3D, Doom and Duke Nukem 3D did their rendering.
+
+The example is base on the excellent Punity library, and its readme follows bellow.
+
+## Usage
+
+1. [Download the Visual C++ Build Tools](http://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe)
+2. Open a terminal and run `vcbuildtools.bat` to configure the build environment
+3. Compile with `build.bat`
+4. Run the final application with `bin\main.exe`
+
+
 # Punity
 
 A tiny game engine with zero dependencies in C that I made for myself to make tiny games. It's great for game jams. It is also my kōhai course in simplicity and a tribute to my senpai and friend [rxi](https://twitter.com/x_rxi).
