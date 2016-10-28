@@ -1,2 +1,3 @@
 icon.ico ICON "res\\icon.ico"
 font.png RESOURCE "res\\font.png"
+chess.png RESOURCE "res\\chess.png"

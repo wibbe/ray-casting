@@ -1,7 +1,5 @@
 #include "punity.c"
 
-static Font font;
-
 #define COLOR_BLACK  (1)
 #define COLOR_WHITE  (2)
 #define COLOR_GRAY   (3)
@@ -64,10 +62,18 @@ Vec2 player_pos = {0.0, 0.0};
 Vec2 player_dir = {0.0, 1.0};
 Vec2 camera_plane = {0.66, 0.0};
 
+static Font font;
+static Bitmap chess;
+
+typedef struct {
+   float ray_dist;
+   float line_dist;
+} Intersection;
+
 // Line ray intersection from these articles
 // https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d
 // http://stackoverflow.com/questions/14307158/how-do-you-check-for-intersection-between-a-line-segment-and-a-line-ray-emanatin
-float line_ray_intersect(Vec2 ray_start, Vec2 ray_dir, Vec2 p1, Vec2 p2)
+Intersection line_ray_intersect(Vec2 ray_start, Vec2 ray_dir, Vec2 p1, Vec2 p2)
 {
    Vec2 v1 = vec2_sub(ray_start, p1);
    Vec2 v2 = vec2_sub(p2, p1);
@@ -82,10 +88,15 @@ float line_ray_intersect(Vec2 ray_start, Vec2 ray_dir, Vec2 p1, Vec2 p2)
    float t1 = vec2_perp_dot(v2, v1) / dot;
    float t2 = vec2_dot(v1, v3) / dot;
 
-   if (t1 >= 0.0f && t2 >= 0.0f && t2 <= 1.0f)
-      return t1;
+   Intersection result = {-1.0f, -1.0f};
 
-   return -1.0f;
+   if (t1 >= 0.0f && t2 >= 0.0f && t2 <= 1.0f)
+   {
+      result.ray_dist = t1;
+      result.line_dist = t2;
+   }
+
+   return result;
 }
 
 float wall_dists[PUN_CANVAS_WIDTH] = {0};
@@ -94,6 +105,7 @@ int wall_sample = 0;
 void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
 {
    float wall_dist = 99999.9f;
+   float wall_interpolation = 0.0f;
    int closest_wall = -1;
 
    Sector * sector = &SECTORS[start_sector];
@@ -106,13 +118,15 @@ void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
       int inside = vec2_perp_dot(vec2_sub(ray_pos, WALLS[w1].pos), vec2_sub(WALLS[w2].pos, WALLS[w1].pos)) > 0 ? 1 : 0;
       if (inside)
       {
-         float dist = line_ray_intersect(ray_pos, ray_dir, WALLS[w1].pos, WALLS[w2].pos);
-         dist = vec2_dot(player_dir, vec2_mul(ray_dir, dist));
+         Intersection intersection = line_ray_intersect(ray_pos, ray_dir, WALLS[w1].pos, WALLS[w2].pos);
+
+         float dist = vec2_dot(player_dir, vec2_mul(ray_dir, intersection.ray_dist));
          
          if (dist > 0.0f && dist < wall_dist)
          {
             closest_wall = wall;
             wall_dist = dist;
+            wall_interpolation = intersection.line_dist;
          }
       }
    }
@@ -124,15 +138,24 @@ void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
       Wall * wall = &WALLS[closest_wall];
 
       int height = (1.0f / wall_dist) * PUN_CANVAS_HEIGHT * 2;
+      //int height = maximum(real_height, PUN_CANVAS_HEIGHT);
+
       int half_height = height / 2;
 
       int start = (PUN_CANVAS_HEIGHT / 2) - half_height;
-      int end = (PUN_CANVAS_HEIGHT / 2) + half_height;
 
-      for (int y = start; y < end; ++y)
+      for (int y = 0; y < height; ++y)
       {
-         int idx = x + (y * PUN_CANVAS_WIDTH);
-         CORE->canvas.bitmap->pixels[idx] = wall->color;
+         int tex_x = (int)(wall_interpolation * chess.width);
+         int tex_y = (int)((y / (float)height) * (float)chess.height);
+
+         int py = start + y;
+         if (py < 0  || py > PUN_CANVAS_HEIGHT)
+            continue;
+
+         int idx = x + (py * PUN_CANVAS_WIDTH);
+
+         pixel_draw(x, py, chess.pixels[tex_x + (tex_y * chess.width)]);
       }
    }
 }
@@ -211,7 +234,9 @@ void init()
    canvas_clear(COLOR_BLACK);
 
 
+   bitmap_load_resource(&chess, "chess.png");
    bitmap_load_resource(&font.bitmap, "font.png");
+
    font.char_width = 4;
    font.char_height = 7;
    CORE->canvas.font = &font;
