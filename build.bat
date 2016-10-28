@@ -32,6 +32,7 @@ if "%compiler%"=="cl" (
 	) else (
 		echo Building debug...
 		cl !common_c! -Od -Z7 !common_l!
+		.\main.exe
 	)
 	popd
 ) else if "%compiler%"=="gcc" (
