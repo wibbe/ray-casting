@@ -11,8 +11,6 @@
 
 
 typedef struct {
-   int floor_height;
-   int ceiling_height;
    int wall_start;
    int wall_count;
 } Sector;
@@ -28,7 +26,7 @@ typedef struct {
 
 /*
 Level layout
-  
+
    2---3
    |   |
 0--1   4--5
@@ -43,7 +41,7 @@ Level layout
 #define WALL_COUNT 8
 
 static Sector SECTORS[SECTOR_COUNT] = {
-   {0.0f, 0.0f, 0, WALL_COUNT}
+   {0, WALL_COUNT}
 };
 
 static Wall WALLS[WALL_COUNT] = {
@@ -107,6 +105,7 @@ void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
    float wall_dist = 99999.9f;
    float wall_interpolation = 0.0f;
    int closest_wall = -1;
+   int closest_wall_next = -1;
 
    Sector * sector = &SECTORS[start_sector];
 
@@ -124,7 +123,8 @@ void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
          
          if (dist > 0.0f && dist < wall_dist)
          {
-            closest_wall = wall;
+            closest_wall = w1;
+            closest_wall_next = w2;
             wall_dist = dist;
             wall_interpolation = intersection.line_dist;
          }
@@ -135,22 +135,26 @@ void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
 
    if (closest_wall >= 0)
    {
-      Wall * wall = &WALLS[closest_wall];
+      Wall * wall1 = &WALLS[closest_wall];
+      Wall * wall2 = &WALLS[closest_wall_next];
 
-      int height = (1.0f / wall_dist) * PUN_CANVAS_HEIGHT * 2;
-      //int height = maximum(real_height, PUN_CANVAS_HEIGHT);
+      float wall_length = vec2_length(vec2_sub(wall1->pos, wall2->pos));
+
+      int height = (1.0f / wall_dist) * PUN_CANVAS_HEIGHT;
 
       int half_height = height / 2;
-
       int start = (PUN_CANVAS_HEIGHT / 2) - half_height;
 
       for (int y = 0; y < height; ++y)
       {
-         int tex_x = (int)(wall_interpolation * chess.width);
-         int tex_y = (int)((y / (float)height) * (float)chess.height);
+         int tex_x = (int)(wall_length * wall_interpolation * chess.width) % chess.width;
+         int tex_y = ((y * 512 * chess.height) / height) / 512;
+
+         //tex_x = clamp(tex_x, 0, chess.width - 1);
+         //tex_y = clamp(tex_y, 0, chess.height - 1);
 
          int py = start + y;
-         if (py < 0  || py > PUN_CANVAS_HEIGHT)
+         if (py < 0  || py >= PUN_CANVAS_HEIGHT)
             continue;
 
          int idx = x + (py * PUN_CANVAS_WIDTH);
@@ -261,6 +265,7 @@ void step()
 
       
    player_dir = rotate(player_dir, (CORE->mouse_dx * 0.005f));
+   //camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
    camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
 
    clip_reset();
