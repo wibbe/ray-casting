@@ -222,8 +222,14 @@ void bank_end(BankState *state);
 // File I/O
 //
 
-void *file_read(const char *path, size_t *size);
+void *file_read(Bank * bank, const char *path, size_t *size);
 bool file_write(const char *path, void *ptr, size_t size);
+
+i32 read_i32(unsigned char ** buffer);
+i16 read_i16(unsigned char ** buffer);
+u8 read_u8(unsigned char ** buffer);
+const char * read_str(unsigned char ** buffer, size_t len);
+
 
 //
 // Math

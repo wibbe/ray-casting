@@ -1,4 +1,6 @@
+
 #include "punity.c"
+#include "map.c"
 
 #define COLOR_BLACK  (1)
 #define COLOR_WHITE  (2)
@@ -8,18 +10,6 @@
 #define COLOR_GREEN  (6)
 #define COLOR_YELLOW (7)
 
-
-
-typedef struct {
-   int wall_start;
-   int wall_count;
-} Sector;
-
-typedef struct {
-   Vec2 pos;
-   int next_sector;
-   int color;
-} Wall;
 
 
 
@@ -59,6 +49,8 @@ static Wall WALLS[WALL_COUNT] = {
 Vec2 player_pos = {0.0, 0.0};
 Vec2 player_dir = {0.0, 1.0};
 Vec2 camera_plane = {0.66, 0.0};
+
+Map map;
 
 static Font font;
 static Bitmap chess;
@@ -161,6 +153,10 @@ void raycast(int x, Vec2 ray_pos, Vec2 ray_dir, int start_sector)
 
          pixel_draw(x, py, chess.pixels[tex_x + (tex_y * chess.width)]);
       }
+
+      // Draw floor
+      for (int y = (PUN_CANVAS_HEIGHT / 2) + half_height; y < PUN_CANVAS_HEIGHT; ++y)
+         pixel_draw(x, y, COLOR_GRAY);
    }
 }
 
@@ -244,6 +240,8 @@ void init()
    font.char_width = 4;
    font.char_height = 7;
    CORE->canvas.font = &font;
+
+   map_load_wad("test.wad", &map);
 }
 
 void step()
@@ -264,7 +262,7 @@ void step()
       player_pos = vec2_add(player_pos, vec2_mul(vec2_perp(player_dir), -0.06f));
 
       
-   player_dir = rotate(player_dir, (CORE->mouse_dx * 0.005f));
+   player_dir = rotate(player_dir, (CORE->mouse_dx * 0.004f));
    //camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
    camera_plane = vec2_mul(vec2_perp(player_dir), -0.66f);
 
@@ -290,5 +288,5 @@ void step()
    //sprintf(buf, "%0.2f %0.2f (%0.2f %0.2f)", player_pos.x, player_pos.y, player_dir.x, player_dir.y); 
    text_draw(buf, 0, 0, COLOR_WHITE);
 
-   draw_minimap();
+   //draw_minimap();
 }

@@ -134,8 +134,7 @@ perf_delta(const PerfSpan *span)
 // File I/O
 //
 
-void *
-file_read(const char *path, size_t *size)
+void * file_read(Bank * bank, const char *path, size_t *size)
 {
     FILE *f = fopen(path, "rb");
     if (f) {
@@ -143,7 +142,7 @@ file_read(const char *path, size_t *size)
         *size = ftell(f);
         fseek(f, 0L, SEEK_SET);
 
-        u8 *ptr = malloc(*size + 1);
+        u8 *ptr = bank_push(bank, *size + 1);
         size_t read = fread(ptr, 1, *size, f);
         fclose(f);
         ASSERT(read == *size);
@@ -151,11 +150,11 @@ file_read(const char *path, size_t *size)
 
         return ptr;
     }
+
     return 0;
 }
 
-bool
-file_write(const char *path, void *ptr, size_t size)
+bool file_write(const char *path, void *ptr, size_t size)
 {
     FILE *f = fopen(path, "wb+");
     if (f) {
@@ -164,6 +163,29 @@ file_write(const char *path, void *ptr, size_t size)
         return true;
     }
     return false;
+}
+
+i32 read_i32(unsigned char ** buffer)
+{
+    i32 value;
+    memcpy(&value, *buffer, sizeof(i32));
+    *buffer += sizeof(i32);
+    return value;
+}
+
+i16 read_i16(unsigned char ** buffer)
+{
+    i16 value;
+    memcpy(&value, *buffer, sizeof(i16));
+    *buffer += sizeof(i16);
+    return value;
+}
+
+u8 read_u8(unsigned char ** buffer)
+{
+    u8 value = **buffer;
+    *buffer++;
+    return value;
 }
 
 //
