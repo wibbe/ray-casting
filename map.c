@@ -24,6 +24,7 @@ typedef struct {
 } Map;
 
 
+
 typedef struct {
 	char identifier[4];
 	i32 lump_count;
@@ -77,6 +78,8 @@ bool map_load_wad(const char * filename, Map * map)
 	unsigned char * data = resource_get(filename, &data_size);
 	if (!data)
 		return false;
+
+	memset(map, 0, sizeof(Map));
 
 	unsigned char * it = data;
 
@@ -211,5 +214,29 @@ bool map_load_wad(const char * filename, Map * map)
 		printf("  [%2d] = floor-height: %d ceiling-height: %d floor-tex: %s ceiling-tex: %s\n", i, sectors[i].floor_height, sectors[i].ceiling_height, floor, ceil);
 	}
 
-	return false;
+
+	int wall_start = 0;
+	int wall_it = 0;
+
+	map->sector_count = sector_count;
+	for (int sec_it = 0; sec_it < sector_count; ++sec_it)
+	{
+		Sector * map_sector = map->sectors[sec_it];
+
+		// Find the first line that belongs to this sector
+		for (int line_it = 0; line_it < line_count; ++line_it)
+		{
+			int side_def = lines[line_it].front_side_def;
+			if (side_def == -1)
+				continue;
+
+			if (sides[side_def].sector == sec_it)
+		}
+
+		map->sector_count++;
+	}
+
+
+
+	return true;
 }
